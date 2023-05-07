@@ -1,2 +1,2 @@
 # Student-Electronic-Document-Manager
- Student Electronic Document MAnager For Lead City University 
+ Student Electronic Document Manager for Lead City University

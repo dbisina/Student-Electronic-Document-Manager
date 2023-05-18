@@ -9,7 +9,9 @@ import mysql.connector
 
 # Create a connection to the database
 conn = mysql.connector.connect(
-    host='DELL',
+    host='localhost',
+    user='root',
+    password='password',
     database='lcu_database'
 )
 
@@ -261,5 +263,6 @@ def user_functions():
     # code to display user-specific functions goes here
     return render_template('user-functions.html')
 
-    if name == 'main':
-        app.run(debug=True)
+    
+if __name__ == '__main__':
+    app.run(debug=True)

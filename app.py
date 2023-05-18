@@ -5,27 +5,23 @@ import sqlite3
 import threading
 import os
 
-# Create a thread-local storage for the database connection
-# This ensures that each thread has its own connection object
-_db_connections = threading.local()
+import mysql.connector
 
-def get_db():
-    # Get the connection for the current thread
-    if not hasattr(_db_connections, 'connection'):
-        _db_connections.connection = sqlite3.connect('database.db')
-    return _db_connections.connection
+# Create a connection to the database
+conn = mysql.connector.connect(
+    host='DELL',
+    database='lcu_database'
+)
 
-#connect database
-conn = sqlite3.connect('your_database_name.db')
-
-#function to query databse
+# Function to query the database
 def query_db(username):
-    conn = get_db()
-    cur = conn.cursor()
-    cur.execute("SELECT password FROM users WHERE username=?", (username,))
-    result = cur.fetchone()
-    cur.close()
-    return result[0] if result else None
+    cursor = conn.cursor()
+    query = "SELECT * FROM Students_lcu WHERE username=%s"
+    cursor.execute(query, (username,))
+    result = cursor.fetchone()
+    cursor.close()
+    return result
+    
 app = Flask(__name__, template_folder='templates')
 
 app.secret_key = "secret_key"

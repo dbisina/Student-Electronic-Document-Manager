@@ -18,11 +18,14 @@ conn = mysql.connector.connect(
 # Function to query the database
 def query_db(username):
     cursor = conn.cursor()
-    query = "SELECT * FROM Students_lcu WHERE username=%s"
+    query = "SELECT passkey FROM Students WHERE username=%s"
     cursor.execute(query, (username,))
     result = cursor.fetchone()
     cursor.close()
-    return result
+    if result:
+        return result[0]
+    else:
+        return None
     
 app = Flask(__name__, template_folder='templates')
 
@@ -54,7 +57,7 @@ def login_required(f):
 def admin_index():
     return render_template('admin_index.html')
 
-@app.route('/')
+@app.route('/user_index')
 @login_required
 def user_index():
     return render_template('user_index.html')

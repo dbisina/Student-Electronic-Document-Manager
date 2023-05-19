@@ -2,15 +2,15 @@ CREATE DATABASE lcu_database;
 
 USE lcu_database;
 
-CREATE TABLE Students_lcu (
+CREATE TABLE Students (
   id INT AUTO_INCREMENT PRIMARY KEY,
   first_name VARCHAR(255),
   last_name VARCHAR(255),
   username VARCHAR(255),
-  password VARCHAR(255)
+  passkey VARCHAR(255)
 );
 
-INSERT INTO Students_lcu (first_name, last_name, username, password)
+INSERT INTO Students (first_name, last_name, username, passkey)
 VALUES
   ('John', 'Doe', 'johndoe', 'password1'),
   ('Jane', 'Smith', 'janesmith', 'password2'),

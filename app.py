@@ -15,6 +15,7 @@ app.config['MYSQL_USER'] = 'root'
 app.config['MYSQL_PASSWORD'] = 'password'
 app.config['MYSQL_DB'] = 'lcu_database'
 
+
 mysql = MySQL(app)
 
 def query_db(matric_no):
@@ -30,7 +31,7 @@ def query_db(matric_no):
 
 def query_db_otp(otp):
     cursor = mysql.connection.cursor()
-    query = "SELECT passkey FROM otp WHERE otp%s"
+    query = "SELECT passkey FROM otp WHERE passkey = %s"  # Specify the column name in the WHERE clause
     cursor.execute(query, (otp,))
     result = cursor.fetchone()
     cursor.close()
@@ -39,12 +40,14 @@ def query_db_otp(otp):
     else:
         return None
 
-def save_user(first_name, last_name, matric_no, password, department, phone_number):
+def save_user(first_name, last_name, matric_no, passkey, department, phone_number):
     cursor = mysql.connection.cursor()
     query = "INSERT INTO Students (first_name, last_name, matric_no, passkey, department, phone_number) VALUES (%s, %s, %s, %s, %s, %s)"
     cursor.execute(query, (first_name, last_name, matric_no, passkey, department, phone_number))
     mysql.connection.commit()
+    user_id = cursor.lastrowid
     cursor.close()
+    return user_id
 
 # Set up file upload folder
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -86,17 +89,17 @@ def login():
             otp = request.form['otp']
             # Process OTP here
             stored_otp = query_db_otp(otp)
-            if stored_otp is not None and stored_otp == otp:
-                return redirect(url_for('registration'))
+            if stored_otp is not None:
+                return redirect(url_for('register'))
             else:
                 flash('Invalid OTP')
         else:
             # Handle username and password submission
             matric_no = request.form['username']
-            password = request.form['password']
+            passkey = request.form['password']
             stored_password = query_db(matric_no)
             # Process username and password here
-            if matric_no == 'admin' and password == 'admin':
+            if matric_no == 'admin' and passkey == 'admin':
                 session['username'] = matric_no
                 return redirect(url_for('admin_index'))
             elif stored_password is not None and stored_password == passkey:
@@ -130,10 +133,11 @@ def register():
         if passkey != confirm_password:
             flash("Passwords do not match.")
         else:
-            save_user(first_name, last_name, matric_no, passkey, department, phone_number)
-            return redirect(url_for('login'))
+            user_id = save_user(first_name, last_name, matric_no, passkey, department, phone_number)
+            session['matric_no'] = matric_no
+            return redirect(url_for('login.html'))
+    return render_template('registeration_user.html')
 
-    return render_template('registration.html')
 # Upload file
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required
@@ -218,42 +222,120 @@ def empty_recycle_bin():
     return redirect(url_for('recycle_bin'))
 
 # User management
-@app.route('/user_management')
-@login_required
+@app.route("/user_management")
 def user_management():
-    # code to retrieve all users and their information goes here
-    return render_template('user_management.html')
+    # Fetch all user data from the database
+    cursor = mysql.connection.cursor()
+    query = "SELECT * FROM Students"
+    cursor.execute(query)
+    users = cursor.fetchall()
+    cursor.close()
+    return render_template('user_management.html', Users=users)
 
 # Add user
 @app.route('/add_user', methods=['GET', 'POST'])
 @login_required
 def add_user():
     if request.method == 'POST':
-        matric_number = request.form['matric-number']
+        session['matric_number'] = request.form['matric-number']
+        return redirect(url_for('generate_otp'))
+    else:
+        return render_template('add_user.html')
+
+@app.route('/generate_otp', methods=['POST'])
+@login_required
+def generate_otp():
+    matric_number = request.form.get('matric-number')
     
+    if matric_number:
         otp = random.randint(100000, 999999)
         
         # Store the OTP and matric number in the database
         # (Make sure to have a table named 'otp' with 'passkey' and 'matric_no' columns)
-        cursor = conn.cursor()
+        cursor = mysql.connection.cursor()
         query = "INSERT INTO otp (matric_no, passkey) VALUES (%s, %s)"
         cursor.execute(query, (matric_number, otp))
-        conn.commit()
+        mysql.connection.commit()
         cursor.close()
         
-        return render_template('otp_generated.html', otp=otp, matric_number=matric_number)
         flash('User added successfully')
-        return redirect(url_for('user_management'))
+        return render_template('generate_otp.html', otp=otp, matric_number=matric_number)
     else:
-            return render_template('add-user.html')
+        flash('Matric number not found')
+        return redirect(url_for('add_user'))
 
-# Generate user pin
-@app.route('/generate-user-pin/<user_id>')
-@login_required
-def generate_user_pin(user_id):
-    # code to generate a PIN for the specified user goes here
-    flash('PIN generated successfully')
-    return redirect(url_for('user_management'))
+
+
+    
+# Route for the Edit User page
+@app.route('/edit_user', methods=['GET', 'POST'])
+@app.route('/edit_user', methods=['GET', 'POST'])
+def edit_user():
+    if request.method == 'POST':
+        user_id = request.form['user_id']
+        first_name = request.form['first_name']
+        last_name = request.form['last_name']
+        department = request.form['department']
+        phone_number = request.form['phone_number']
+        
+        # Update the user's details in the database
+        cursor = mysql.connection.cursor()
+        query = "UPDATE Students SET first_name = %s, last_name = %s, department = %s, phone_number = %s WHERE id = %s"
+        cursor.execute(query, (first_name, last_name, department, phone_number, user_id))
+        mysql.connection.commit()
+        cursor.close()
+        
+        flash('User details updated successfully')
+        return redirect(url_for('edit_user'))
+    else:
+        # Retrieve all users from the database
+        cursor = mysql.connection.cursor()
+        query = "SELECT * FROM Students"
+        cursor.execute(query)
+        users = cursor.fetchall()
+        cursor.close()
+        
+        return render_template('edit_user.html', users=users)
+
+
+# Route for the Delete User page
+@app.route('/delete_user', methods=['GET', 'POST'])
+def delete_user():
+    if request.method == 'POST':
+        if 'delete_selected' in request.form:
+            selected_users = request.form.getlist('selected_users')
+            
+            # Delete the selected users from the database
+            cursor = mysql.connection.cursor()
+            for user_id in selected_users:
+                query = "DELETE FROM Students WHERE id = %s"
+                cursor.execute(query, (user_id,))
+            mysql.connection.commit()
+            cursor.close()
+            
+            flash('Selected users deleted successfully')
+        elif 'delete_all' in request.form:
+            # Delete all users from the database
+            cursor = mysql.connection.cursor()
+            query = "DELETE FROM Students"
+            cursor.execute(query)
+            mysql.connection.commit()
+            cursor.close()
+            
+            flash('All users deleted successfully')
+        
+        return redirect(url_for('delete_user'))
+    else:
+        # Retrieve all users from the database
+        cursor = mysql.connection.cursor()
+        query = "SELECT * FROM Students"
+        cursor.execute(query)
+        users = cursor.fetchall()
+        cursor.close()
+        
+        return render_template('delete_user.html', users=users)
+
+
 
 # Disable user
 @app.route('/disable-user/<user_id>')
@@ -263,13 +345,6 @@ def disable_user(user_id):
     flash('User disabled successfully')
     return redirect(url_for('user_management'))
 
-# Delete user
-@app.route('/delete-user/<user_id>')
-@login_required
-def delete_user(user_id):
-    # code to delete the specified user goes here
-    flash('User deleted successfully')
-    return redirect(url_for('user_management'))
 
 # System configuration
 @app.route('/system-configuration', methods=['GET', 'POST'])
@@ -316,3 +391,8 @@ def user_functions():
     
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
+print('             ~lyon98.dbios')

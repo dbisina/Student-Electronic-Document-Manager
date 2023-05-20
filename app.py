@@ -97,6 +97,22 @@ def logout():
     session.pop('username', None)
     return redirect(url_for('login'))
 
+@app.route("/register", methods=["POST"])
+def register():
+  first_name = request.form["first-name"]
+  last_name = request.form["last-name"]
+  matric_no = request.form["matric-no"]
+  password = request.form["password"]
+  confirm_password = request.form["confirm-password"]
+  department = request.form["department"]
+  phone_number = request.form["phone-number"]
+
+  if password != confirm_password:
+    return "Passwords do not match."
+
+  # TODO: Save the user to the database.
+    return "User registered successfully."
+
 # Upload file
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required

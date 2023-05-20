@@ -227,7 +227,7 @@ def user_management():
     # Fetch all user data from the database
     cursor = mysql.connection.cursor()
     query = "SELECT * FROM Students"
-    cursor.execute(query)
+    cursor .execute(query)
     users = cursor.fetchall()
     cursor.close()
     return render_template('user_management.html', Users=users)

@@ -229,7 +229,19 @@ def user_management():
 @login_required
 def add_user():
     if request.method == 'POST':
-        # code to create a new user with the given information goes here
+        matric_number = request.form['matric-number']
+    
+        otp = random.randint(100000, 999999)
+        
+        # Store the OTP and matric number in the database
+        # (Make sure to have a table named 'otp' with 'passkey' and 'matric_no' columns)
+        cursor = conn.cursor()
+        query = "INSERT INTO otp (matric_no, passkey) VALUES (%s, %s)"
+        cursor.execute(query, (matric_number, otp))
+        conn.commit()
+        cursor.close()
+        
+        return render_template('otp_generated.html', otp=otp, matric_number=matric_number)
         flash('User added successfully')
         return redirect(url_for('user_management'))
     else:

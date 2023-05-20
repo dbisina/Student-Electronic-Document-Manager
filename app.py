@@ -3,31 +3,48 @@ from functools import wraps
 from werkzeug.utils import secure_filename
 import threading
 import os
-
 import mysql.connector
+from flask_mysqldb import MySQL
 
-# Create a connection to the database
-conn = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='password',
-    database='lcu_database'
-)
+    
+app = Flask(__name__, template_folder='templates')
+app.secret_key = "secret_key"
 
-# Function to query the database
-def query_db(username):
-    cursor = conn.cursor()
-    query = "SELECT passkey FROM Students WHERE username=%s"
-    cursor.execute(query, (username,))
+app.config['MYSQL_HOST'] = 'localhost'
+app.config['MYSQL_USER'] = 'root'
+app.config['MYSQL_PASSWORD'] = 'password'
+app.config['MYSQL_DB'] = 'lcu_database'
+
+mysql = MySQL(app)
+
+def query_db(matric_no):
+    cursor = mysql.connection.cursor()
+    query = "SELECT passkey FROM Students WHERE matric_no=%s"
+    cursor.execute(query, (matric_no,))
     result = cursor.fetchone()
     cursor.close()
     if result:
         return result[0]
     else:
         return None
-    
-app = Flask(__name__, template_folder='templates')
-app.secret_key = "secret_key"
+
+def query_db_otp(otp):
+    cursor = mysql.connection.cursor()
+    query = "SELECT passkey FROM otp WHERE otp%s"
+    cursor.execute(query, (otp,))
+    result = cursor.fetchone()
+    cursor.close()
+    if result:
+        return result[0]
+    else:
+        return None
+
+def save_user(first_name, last_name, matric_no, password, department, phone_number):
+    cursor = mysql.connection.cursor()
+    query = "INSERT INTO Students (first_name, last_name, matric_no, passkey, department, phone_number) VALUES (%s, %s, %s, %s, %s, %s)"
+    cursor.execute(query, (first_name, last_name, matric_no, passkey, department, phone_number))
+    mysql.connection.commit()
+    cursor.close()
 
 # Set up file upload folder
 app.config['UPLOAD_FOLDER'] = 'uploads'
@@ -68,51 +85,55 @@ def login():
             # Handle OTP submission
             otp = request.form['otp']
             # Process OTP here
-            stored_otp = query_db(otp)
+            stored_otp = query_db_otp(otp)
             if stored_otp is not None and stored_otp == otp:
-                return redirect(url_for('registeration'))
+                return redirect(url_for('registration'))
             else:
-                flash('Invalid Otp')
+                flash('Invalid OTP')
         else:
             # Handle username and password submission
-            username = request.form['username']
+            matric_no = request.form['username']
             password = request.form['password']
-            stored_password = query_db(username)
+            stored_password = query_db(matric_no)
             # Process username and password here
-            if username == 'admin' and password == 'admin':
-                session['username'] = username
-                return redirect(url_for('admin_index')) 
-            elif stored_password is not None and stored_password == password:
-                session['username'] = username
-                return redirect(url_for('user_index'))                
+            if matric_no == 'admin' and password == 'admin':
+                session['username'] = matric_no
+                return redirect(url_for('admin_index'))
+            elif stored_password is not None and stored_password == passkey:
+                session['username'] = matric_no
+                return redirect(url_for('user_index'))
             else:
                 flash('Invalid username or password')
+
     # Display login form
     return render_template('login.html')
+
 
 # Logout
 @app.route('/logout')
 @login_required
 def logout():
-    session.pop('username', None)
+    session.pop('matric_no', None)
     return redirect(url_for('login'))
 
-@app.route("/register", methods=["POST"])
+@app.route("/register", methods=["GET", "POST"])
 def register():
-  first_name = request.form["first-name"]
-  last_name = request.form["last-name"]
-  matric_no = request.form["matric-no"]
-  password = request.form["password"]
-  confirm_password = request.form["confirm-password"]
-  department = request.form["department"]
-  phone_number = request.form["phone-number"]
+    if request.method == "POST":
+        first_name = request.form["first-name"]
+        last_name = request.form["last-name"]
+        matric_no = request.form["matric-no"]
+        passkey = request.form["password"]
+        confirm_password = request.form["confirm-password"]
+        department = request.form["department"]
+        phone_number = request.form["phone-number"]
 
-  if password != confirm_password:
-    return "Passwords do not match."
+        if passkey != confirm_password:
+            flash("Passwords do not match.")
+        else:
+            save_user(first_name, last_name, matric_no, passkey, department, phone_number)
+            return redirect(url_for('login'))
 
-  # TODO: Save the user to the database.
-    return "User registered successfully."
-
+    return render_template('registration.html')
 # Upload file
 @app.route('/upload', methods=['GET', 'POST'])
 @login_required

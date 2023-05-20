@@ -5,7 +5,7 @@ import threading
 import os
 import mysql.connector
 from flask_mysqldb import MySQL
-
+import random
     
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "secret_key"
@@ -218,14 +218,14 @@ def empty_recycle_bin():
     return redirect(url_for('recycle_bin'))
 
 # User management
-@app.route('/user-management')
+@app.route('/user_management')
 @login_required
 def user_management():
     # code to retrieve all users and their information goes here
-    return render_template('user-management.html')
+    return render_template('user_management.html')
 
 # Add user
-@app.route('/add-user', methods=['GET', 'POST'])
+@app.route('/add_user', methods=['GET', 'POST'])
 @login_required
 def add_user():
     if request.method == 'POST':

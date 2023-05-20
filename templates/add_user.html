@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add User</title>
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='styles.css') }}">
+</head>
+<body class="purple-theme">
+    <nav>
+        <ul>
+            <li><a href="{{ url_for('index') }}">Home</a></li>
+            <li><a href="{{ url_for('user_management') }}">Go Back</a></li>
+        </ul>
+    </nav>
+
+    <div class="container">
+        <h1>Add User</h1>
+        <form method="POST" action="{{ url_for('generate_otp') }}">
+            <label for="matric-number">Matric Number:</label>
+            <input type="text" id="matric-number" name="matric-number" required>
+
+            <button type="submit" class="generate-otp-button">Generate OTP</button>
+        </form>
+    </div>
+</body>
+</html>

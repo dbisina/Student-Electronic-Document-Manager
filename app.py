@@ -20,7 +20,7 @@ mysql = MySQL(app)
 
 def query_db(matric_no):
     cursor = mysql.connection.cursor()
-    query = "SELECT passkey FROM Students WHERE matric_no=%s"
+    query = "SELECT passkey FROM Students WHERE matric_no= %s"
     cursor.execute(query, (matric_no,))
     result = cursor.fetchone()
     cursor.close()
@@ -135,7 +135,7 @@ def register():
         else:
             user_id = save_user(first_name, last_name, matric_no, passkey, department, phone_number)
             session['matric_no'] = matric_no
-            return redirect(url_for('login.html'))
+            return redirect(url_for('login'))
     return render_template('registeration_user.html')
 
 # Upload file

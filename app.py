@@ -230,33 +230,32 @@ def delete_document(document_id):
     return redirect(url_for('delete_document'))
 
 
-# Recycle bin
-@app.route('/recycle-bin')
-@login_required
 def recycle_bin():
-    deleted_files = []
-    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-        if filename.startswith('.'):
-            continue
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            if not os.path.isfile(file_path):
-                continue
-                deleted_files.append(filename)
-    return render_template('recycle-bin.html', deleted_files=deleted_files)
+    # Fetch deleted documents from the database
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM deleted_documents")
+    deleted_documents = cursor.fetchall()
+    
+    return render_template("recycle_bin.html", documents=deleted_documents)
 
-# Empty recycle bin
-@app.route('/empty-recycle-bin')
-@login_required
-def empty_recycle_bin():
-    for filename in os.listdir(app.config['UPLOAD_FOLDER']):
-        if filename.startswith('.'):
-            continue
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            if not os.path.isfile(file_path):
-                continue
-                os.remove(file_path)
-                flash('Recycle bin emptied successfully')
-    return redirect(url_for('recycle_bin'))
+@app.route("/restore_document/<int:document_id>")
+def restore_document(document_id):
+    # Restore document by updating the status in the database
+    cursor = db.cursor()
+    cursor.execute("UPDATE deleted_documents SET status = 'active' WHERE id = %s", (document_id,))
+    db.commit()
+    
+    return redirect(url_for("recycle_bin"))
+
+@app.route("/delete_permanently/<int:document_id>")
+def delete_permanently(document_id):
+    # Delete document permanently from the database
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM deleted_documents WHERE id = %s", (document_id,))
+    db.commit()
+    
+    return redirect(url_for("recycle_bin"))# Empty recycle bin
+
 
 # User management
 @app.route("/user_management")
@@ -428,6 +427,10 @@ def user_functions():
     
 if __name__ == '__main__':
     app.run(debug=True)
+
+
+
+
 
 
 

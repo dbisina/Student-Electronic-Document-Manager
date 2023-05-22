@@ -119,6 +119,7 @@ def logout():
     session.pop('matric_no', None)
     return redirect(url_for('login'))
 
+#Register 
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if request.method == "POST":
@@ -138,41 +139,74 @@ def register():
             return redirect(url_for('login'))
     return render_template('registeration_user.html')
 
-# Upload file
-@app.route('/upload', methods=['GET', 'POST'])
-@login_required
-def upload():
+#Upload Document
+@app.route('/upload_document', methods=['GET', 'POST'])
+def upload_document():
     if request.method == 'POST':
+        # Get the uploaded file
         file = request.files['file']
-        if file and allowed_file(file.filename):
-            filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-            flash('File uploaded successfully')
-            return redirect(url_for('index'))
-        else:
-            flash('Invalid file type')
-    return render_template('upload.html')
+        
+        # Save the file to the desired location
+        file.save('path/to/save/file')
+        
+        # Get other form data
+        title = request.form['title']
+        description = request.form['description']
+        access_type = request.form['access-type']
+        
+        # Save the data to the database
+        cursor = db.cursor()
+        sql = "INSERT INTO documents (title, description, access_type) VALUES (%s, %s, %s)"
+        values = (title, description, access_type)
+        cursor.execute(sql, values)
+        db.commit()
+        cursor.close()
+        
+        # Redirect to a success page
+        return render_template('upload_success.html')
+    
+    return render_template('upload_document.html')
 
-# Download file
-@app.route('/download/<filename>')
-@login_required
-def download(filename):
-    return send_from_directory(app.config['UPLOAD_FOLDER'], filename)
+# Route to render the "Download Document" page
+@app.route('/download_document/<int:document_id>')
+def download_document(document_id):
+    # Establish a connection to the MySQL database
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
 
-# Edit file
-@app.route('/edit/<filename>', methods=['GET', 'POST'])
-@login_required
-def edit(filename):
-    if request.method == 'POST':
-        new_text = request.form['text']
-        with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'w') as f:
-            f.write(new_text)
-            flash('File edited successfully')
-            return redirect(url_for('index'))
-    else:
-        with open(os.path.join(app.config['UPLOAD_FOLDER'], filename), 'r') as f:
-            text = f.read()
-        return render_template('edit.html', filename=filename, text=text)
+    # Fetch the document from the database
+    query = "SELECT * FROM documents WHERE id = %s"
+    cursor.execute(query, (document_id,))
+    document = cursor.fetchone()
+
+    # Close the database connection
+    cursor.close()
+    conn.close()
+
+    # Get the file path of the document
+    file_path = document['file_path']
+
+    return send_file(file_path, as_attachment=True)
+
+
+# Route to render the "Edit Document" page
+@app.route('/edit_document')
+def edit_document():
+    # Establish a connection to the MySQL database
+    conn = mysql.connector.connect(**db_config)
+    cursor = conn.cursor()
+
+    # Fetch documents from the database
+    query = "SELECT * FROM documents"
+    cursor.execute(query)
+    documents = cursor.fetchall()
+
+    # Close the database connection
+    cursor.close()
+    conn.close()
+
+    return render_template('edit_document.html', documents=documents)
+
 
 # Share file
 @app.route('/share/<filename>', methods=['GET', 'POST'])
@@ -186,12 +220,15 @@ def share(filename):
     else:
         return render_template('share.html', filename=filename)
 
-# Delete file
-@app.route('/delete/<filename>')
-@login_required
-def delete(filename):
-    os.remove(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    flash('File deleted successfully')
+@app.route('/delete_document/<int:document_id>', methods=['GET', 'POST'])
+def delete_document(document_id):
+    # Delete the document from the database
+    delete_query = "DELETE FROM documents WHERE id = %s"
+    db_cursor.execute(delete_query, (document_id,))
+    db_connection.commit()
+
+    return redirect(url_for('delete_document'))
+
 
 # Recycle bin
 @app.route('/recycle-bin')

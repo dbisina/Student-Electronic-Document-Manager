@@ -1,0 +1,77 @@
+/* Global Styles */
+body {
+    background-color: #f6f4fd;
+    color: #333;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  
+  h1 {
+    font-size: 24px;
+    margin-bottom: 20px;
+  }
+  
+  /* Navigation */
+  nav {
+    background-color: #6a0080;
+    color: #fff;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+  }
+  
+  .logo {
+    margin-right: 10px;
+  }
+  
+  h2 {
+    font-size: 18px;
+    margin: 0;
+  }
+  
+  /* Table Styles */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  th, td {
+    padding: 10px;
+    text-align: left;
+  }
+  
+  thead {
+    background-color: #6a0080;
+    color: #fff;
+  }
+  
+  tbody tr:nth-child(even) {
+    background-color: #f1eaff;
+  }
+  
+  tbody tr:hover {
+    background-color: #e3d7ff;
+  }
+  
+  /* Delete Icon */
+  .fa-trash {
+    color: #6a0080;
+  }
+  
+  /* Link Styles */
+  a {
+    color: #6a0080;
+    text-decoration: none;
+  }
+  
+  a:hover {
+    text-decoration: underline;
+  }
+  

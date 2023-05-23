@@ -146,9 +146,9 @@ def upload_document():
         # Get the uploaded file
         file = request.files['file']
         
-        # Save the file to the desired location
-        file.save('path/to/save/file')
-        
+        location = 'C:/Users/danie/Documents/GitHub/Student Electronic Document Manager/files/'
+        file.save(location)
+            
         # Get other form data
         title = request.form['title']
         description = request.form['description']

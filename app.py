@@ -6,6 +6,7 @@ import os
 import mysql.connector
 from flask_mysqldb import MySQL
 import random
+import uuid
     
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "secret_key"
@@ -146,26 +147,45 @@ def upload_document():
         # Get the uploaded file
         file = request.files['file']
         
-        location = 'C:/Users/danie/Documents/GitHub/Student Electronic Document Manager/files/'
-        file.save(location)
+        # Check if a file was selected
+        if file.filename == '':
+            return "No file selected"
+        
+        # Get the filename and extension
+        filename = secure_filename(file.filename)
+        extension = os.path.splitext(filename)[1]
+        
+        # Generate a unique filename
+        unique_filename = str(uuid.uuid4()) + extension
+        
+        # Construct the file path
+        location = os.path.join('C:/Users/danie/Documents/GitHub/Student Electronic Document Manager/files/', unique_filename)
+        
+        try:
+            # Save the file to the specified location
+            file.save(location)
             
-        # Get other form data
-        title = request.form['title']
-        description = request.form['description']
-        access_type = request.form['access-type']
-        
-        # Save the data to the database
-        cursor = db.cursor()
-        sql = "INSERT INTO documents (title, description, access_type) VALUES (%s, %s, %s)"
-        values = (title, description, access_type)
-        cursor.execute(sql, values)
-        db.commit()
-        cursor.close()
-        
-        # Redirect to a success page
-        return render_template('upload_success.html')
+            # Get other form data
+            title = request.form['title']
+            description = request.form['description']
+            access_type = request.form['access-type']
+            
+            # Save the data to the database
+            cursor = db.cursor()
+            sql = "INSERT INTO documents (title, description, access_type, filename) VALUES (%s, %s, %s, %s)"
+            values = (title, description, access_type, unique_filename)
+            cursor.execute(sql, values)
+            db.commit()
+            cursor.close()
+            
+            # Redirect to a success page
+            return render_template('upload_success.html')
+        except Exception as e:
+            # Handle any exceptions that occur during file saving or database operations
+            return "An error occurred: " + str(e)
     
     return render_template('upload_document.html')
+
 
 # Route to render the "Download Document" page
 @app.route('/download_document/<int:document_id>')
@@ -236,7 +256,7 @@ def recycle_bin():
     cursor.execute("SELECT * FROM deleted_documents")
     deleted_documents = cursor.fetchall()
     
-    return render_template("recycle_bin.html", documents=deleted_documents)
+    return render_template("Recycle_bin.html", documents=deleted_documents)
 
 @app.route("/restore_document/<int:document_id>")
 def restore_document(document_id):

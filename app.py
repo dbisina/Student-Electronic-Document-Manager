@@ -149,7 +149,7 @@ def upload_document():
         
         # Check if a file was selected
         if file.filename == '':
-            return "No file selected"
+            return "No file selected"  
         
         # Get the filename and extension
         filename = secure_filename(file.filename)
@@ -228,17 +228,6 @@ def edit_document():
     return render_template('edit_document.html', documents=documents)
 
 
-# Share file
-@app.route('/share/<filename>', methods=['GET', 'POST'])
-@login_required
-def share(filename):
-    if request.method == 'POST':
-        recipient = request.form['recipient']
-        # code to send the file to the recipient goes here
-        flash('File shared successfully')
-        return redirect(url_for('index'))
-    else:
-        return render_template('share.html', filename=filename)
 
 @app.route('/delete_document/<int:document_id>', methods=['GET', 'POST'])
 def delete_document(document_id):
@@ -250,13 +239,6 @@ def delete_document(document_id):
     return redirect(url_for('delete_document'))
 
 
-def recycle_bin():
-    # Fetch deleted documents from the database
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM deleted_documents")
-    deleted_documents = cursor.fetchall()
-    
-    return render_template("Recycle_bin.html", documents=deleted_documents)
 
 @app.route("/restore_document/<int:document_id>")
 def restore_document(document_id):

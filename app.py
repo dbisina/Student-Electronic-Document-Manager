@@ -374,36 +374,6 @@ def delete_user():
         return render_template('delete_user.html', users=users)
 
 
-
-# Disable user
-@app.route('/disable-user/<user_id>')
-@login_required
-def disable_user(user_id):
-    # code to disable the specified user goes here
-    flash('User disabled successfully')
-    return redirect(url_for('user_management'))
-
-
-# System configuration
-@app.route('/system-configuration', methods=['GET', 'POST'])
-@login_required
-def system_configuration():
-    if request.method == 'POST':
-        # code to update the system configuration goes here
-        flash('System configuration updated successfully')
-        return redirect(url_for('system_configuration'))
-    else:
-        # code to retrieve the current system configuration goes here
-        return render_template('system-configuration.html')
-
-# Back up system
-@app.route('/backup-system')
-@login_required
-def backup_system():
-    # code to back up the system goes here
-    flash('System backed up successfully')
-    return redirect(url_for('index'))
-
 # Manage logs
 @app.route('/manage-logs')
 @login_required
@@ -419,12 +389,22 @@ def send_document(filename):
     flash('Document sent successfully')
     return redirect(url_for('index'))
 
-# Perform user functions
-@app.route('/user-functions')
-@login_required
-def user_functions():
-    # code to display user-specific functions goes here
-    return render_template('user-functions.html')
+
+@app.route('/quick_search')
+def quick_search():
+    return render_template('quick_search.html')
+
+@app.route('/search_results', methods=['GET'])
+def search_results():
+    query = request.args.get('query')
+
+    # Perform search in the database using the query
+    cur = mysql.connection.cursor()
+    cur.execute("SELECT * FROM your_table WHERE column_name LIKE %s", ('%' + query + '%',))
+    search_results = cur.fetchall()
+    cur.close()
+
+    return render_template('search_results.html', query=query, results=search_results)
 
     
 if __name__ == '__main__':

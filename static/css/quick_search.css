@@ -1,0 +1,27 @@
+.container {
+    width: 500px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+h1 {
+    color: purple;
+}
+
+input[type="text"] {
+    width: 300px;
+    height: 40px;
+    font-size: 16px;
+    padding: 5px;
+    margin-top: 20px;
+}
+
+button {
+    width: 100px;
+    height: 40px;
+    font-size: 16px;
+    color: #fff;
+    background-color: purple;
+    border: none;
+    margin-top: 10px;
+}

@@ -389,22 +389,15 @@ def send_document(filename):
     flash('Document sent successfully')
     return redirect(url_for('index'))
 
-
-@app.route('/quick_search')
-def quick_search():
-    return render_template('quick_search.html')
-
-@app.route('/search_results', methods=['GET'])
-def search_results():
-    query = request.args.get('query')
-
-    # Perform search in the database using the query
-    cur = mysql.connection.cursor()
-    cur.execute("SELECT * FROM your_table WHERE column_name LIKE %s", ('%' + query + '%',))
-    search_results = cur.fetchall()
-    cur.close()
-
-    return render_template('search_results.html', query=query, results=search_results)
+@app.route('/quick_search', methods=['GET', 'POST'])
+@login_required
+def search():
+    if request.method == 'POST':
+        keyword = request.form['keyword']
+        results = quick_search(keyword)
+        return render_template('search_results.html', results=results)
+    else:
+        return render_template('quick_search.html')
 
     
 if __name__ == '__main__':

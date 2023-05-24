@@ -7,9 +7,14 @@ import mysql.connector
 from flask_mysqldb import MySQL
 import random
 import uuid
-    
+from werkzeug.routing import UUIDConverter
+
+
+
 app = Flask(__name__, template_folder='templates')
 app.secret_key = "secret_key"
+
+app.url_map.converters['uuid'] = UUIDConverter
 
 app.config['MYSQL_HOST'] = 'localhost'
 app.config['MYSQL_USER'] = 'root'
@@ -74,12 +79,51 @@ def login_required(f):
 @app.route('/')
 @login_required
 def admin_index():
-    return render_template('admin_index.html')
+    document_id = get_document_id()
+    return render_template('admin_index.html',  document_id=document_id)
 
 @app.route('/user_index')
 @login_required
 def user_index():
     return render_template('user_index.html')
+
+@app.route('/documents/<int:document_id>')
+def document_route(document_id):
+    # Retrieve the document with the given document_id from your data source
+    document = get_document_by_id(document_id)
+
+    # Check if the document exists
+    if document is None:
+        return "Document not found"
+
+    # Process the document or perform any necessary operations
+    # ...
+
+    # Return a response or render a template with the document information
+    return render_template('document.html', document=document)
+
+@app.route('/some_route')
+def some_route():
+    # Get the document_id from your data source
+    document_id = "123"  # Example document_id as a string
+
+    # Convert the document_id to an integer
+    try:
+        document_id = int(document_id)
+    except ValueError:
+        # Handle the case where document_id is not a valid integer
+        return "Invalid document_id"
+
+    # Validate the document_id if necessary
+    # ...
+
+    # Pass the corrected document_id to url_for
+    document_url = url_for('document_route', document_id=document_id)
+
+    # Use the generated URL as needed
+    # ...
+
+    return "Success"
 
 # Login page
 @app.route('/login', methods=['GET', 'POST'])
@@ -207,6 +251,7 @@ def download_document(document_id):
     file_path = document['file_path']
 
     return send_file(file_path, as_attachment=True)
+
 
 
 # Route to render the "Edit Document" page
@@ -430,13 +475,32 @@ def send_document():
 
 @app.route('/quick_search', methods=['GET', 'POST'])
 @login_required
-def search():
+def quick_search():
     if request.method == 'POST':
         keyword = request.form['keyword']
         results = quick_search(keyword)
         return render_template('search_results.html', results=results)
     else:
         return render_template('quick_search.html')
+
+
+@app.route('/profile')
+@login_required
+def profile():
+    pass
+
+
+# Download document
+@app.route('/download/<filename>')
+@login_required
+def download(filename):
+    path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+    return send_file(path, as_attachment=True)
+
+# Generate unique document ID
+def get_document_id():
+    return str(uuid.uuid4())
+
 
     
 if __name__ == '__main__':

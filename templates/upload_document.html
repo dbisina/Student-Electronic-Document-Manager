@@ -32,7 +32,7 @@
               <p>Download Document</p>
           </a>
       </div>
-      <div class="admin-item">
+      <div class="admin-item active">
           <a href="{{ url_for('upload_document') }}">
               <img src="{{ url_for('static', filename='images/upload.png') }}" alt="Upload Document">
               <p>Upload Document</p>
@@ -63,10 +63,10 @@
           </a>
       </div>
       <div class="admin-item">
-          <a href="{{ url_for('Logs') }}">
-              <img src="{{ url_for('static', filename='images/logs.png') }}" alt="Manage Document Logs">
-              <p>Manage Logs</p>
-          </a>
+        <a href="{{ url_for('manage_logs') }}">
+          <img src="{{ url_for('static', filename='images/logs.png') }}" alt="Manage Document Logs">
+          <p>Manage Logs</p>
+      </a>
       </div>
     </div>
   </div>

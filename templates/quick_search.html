@@ -20,7 +20,7 @@
                     <p>View my Profile</p>
                 </a>
             </div>
-            <div class="admin-item">
+            <div class="admin-item active">
                 <a href="{{ url_for('quick_search') }}">
                     <img src="{{ url_for('static', filename='images/search.png') }}" alt="Quick Search">
                     <p>Quick Search</p>
@@ -63,7 +63,7 @@
                 </a>
             </div>
             <div class="admin-item">
-                <a href="{{ url_for('Logs') }}">
+                <a href="{{ url_for('manage_logs') }}">
                     <img src="{{ url_for('static', filename='images/logs.png') }}" alt="Manage Document Logs">
                     <p>Manage Logs</p>
                 </a>

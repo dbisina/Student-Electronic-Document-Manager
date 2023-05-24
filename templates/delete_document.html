@@ -2,7 +2,7 @@
 <html>
 <head>
   <title>Delete Document</title>
-  <link rel="stylesheet" href="{{ url_for('static', filename='css/purple_theme.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/delete_document.css') }}">
 </head>
 <body>
   <nav>
@@ -44,7 +44,7 @@
               <p>Edit Document</p>
           </a>
       </div>
-      <div class="admin-item">
+      <div class="admin-item active">
           <a href="{{ url_for('delete_document') }}">
               <img src="{{ url_for('static', filename='images/delete.png') }}" alt="Delete Document">
               <p>Delete Document</p>
@@ -63,10 +63,10 @@
           </a>
       </div>
       <div class="admin-item">
-          <a href="{{ url_for('Logs') }}">
-              <img src="{{ url_for('static', filename='images/logs.png') }}" alt="Manage Document Logs">
-              <p>Manage Logs</p>
-          </a>
+        <a href="{{ url_for('manage_logs') }}">
+          <img src="{{ url_for('static', filename='images/logs.png') }}" alt="Manage Document Logs">
+          <p>Manage Logs</p>
+        </a>
       </div>
     </div>
   </div>

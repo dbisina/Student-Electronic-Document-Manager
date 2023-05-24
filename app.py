@@ -239,26 +239,6 @@ def delete_document(document_id):
     return redirect(url_for('delete_document'))
 
 
-
-@app.route("/restore_document/<int:document_id>")
-def restore_document(document_id):
-    # Restore document by updating the status in the database
-    cursor = db.cursor()
-    cursor.execute("UPDATE deleted_documents SET status = 'active' WHERE id = %s", (document_id,))
-    db.commit()
-    
-    return redirect(url_for("recycle_bin"))
-
-@app.route("/delete_permanently/<int:document_id>")
-def delete_permanently(document_id):
-    # Delete document permanently from the database
-    cursor = db.cursor()
-    cursor.execute("DELETE FROM deleted_documents WHERE id = %s", (document_id,))
-    db.commit()
-    
-    return redirect(url_for("recycle_bin"))# Empty recycle bin
-
-
 # User management
 @app.route("/user_management")
 def user_management():
@@ -373,21 +353,80 @@ def delete_user():
         
         return render_template('delete_user.html', users=users)
 
-
-# Manage logs
-@app.route('/manage-logs')
+#manage logs
+@app.route('/manage_logs')
 @login_required
 def manage_logs():
-    # code to retrieve and display the system logs goes here
-    return render_template('manage-logs.html')
+    log_file = 'app.log'  # Specify the path to your log file
 
-# Send document
-@app.route('/send-document/<filename>')
+    # Read log file and retrieve log entries
+    logs = []
+    with open(log_file, 'r') as file:
+        for line in file:
+            log_entry = line.strip()
+            logs.append(log_entry)
+
+    # Reverse the order of logs to display the latest first
+    logs.reverse()
+
+    return render_template('manage_logs.html', logs=logs)
+
+@app.route('/send_document', methods=['GET', 'POST'])
 @login_required
-def send_document(filename):
-    # code to send the document to a recipient goes here
-    flash('Document sent successfully')
-    return redirect(url_for('index'))
+def send_document():
+    if request.method == 'POST':
+        # Get the uploaded file
+        file = request.files['file']
+
+        # Check if a file was selected
+        if file.filename == '':
+            flash('No file selected')
+            return redirect(url_for('send_document'))
+
+        # Get the filename and extension
+        filename = secure_filename(file.filename)
+        extension = os.path.splitext(filename)[1]
+
+        # Generate a unique filename
+        unique_filename = str(uuid.uuid4()) + extension
+
+        # Construct the file path
+        location = os.path.join(app.config['UPLOAD_FOLDER'], unique_filename)
+
+        try:
+            # Save the file to the specified location
+            file.save(location)
+
+            # Get other form data
+            recipient = request.form['recipient']
+            title = request.form['title']
+            description = request.form['description']
+
+            # Save the data to the database
+            cursor = mysql.connection.cursor()
+            query = "INSERT INTO documents (title, description, filename) VALUES (%s, %s, %s)"
+            values = (title, description, unique_filename)
+            cursor.execute(query, values)
+            document_id = cursor.lastrowid
+
+            # Save the document recipient to the database
+            query = "INSERT INTO document_recipients (document_id, recipient) VALUES (%s, %s)"
+            values = (document_id, recipient)
+            cursor.execute(query, values)
+
+            mysql.connection.commit()
+            cursor.close()
+
+            # Redirect to a success page
+            flash('Document sent successfully')
+            return redirect(url_for('send_document'))
+        except Exception as e:
+            # Handle any exceptions that occur during file saving or database operations
+            flash('An error occurred: ' + str(e))
+            return redirect(url_for('send_document'))
+
+    return render_template('send_document.html')
+
 
 @app.route('/quick_search', methods=['GET', 'POST'])
 @login_required

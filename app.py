@@ -118,7 +118,7 @@ def some_route():
     # ...
 
     # Pass the corrected document_id to url_for
-    document_url = url_for('document_route', document_id=document_id)
+    document_url = url_for('document_route', document_id=1234)
 
     # Use the generated URL as needed
     # ...

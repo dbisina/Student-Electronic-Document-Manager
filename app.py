@@ -229,16 +229,19 @@ def upload_document():
 
 @app.route('/upload_document', methods=['GET', 'POST'])
 def upload_document():
-    if request.method == 'POST':
+   
+        
+
+    if request.method == 'POST' and 'document' in request.files:
         # Process the uploaded file
         uploaded_file = request.files['document']
         filename = secure_filename(uploaded_file.filename)
-        
+
         # Save the document to a desired location
         # For example, to save it in a folder called "uploads" in the current directory:
         document_path = f"uploads/{filename}"
         uploaded_file.save(document_path)
-        
+
         # Store the document information in the database
         conn = mysql.connect()
         cursor = conn.cursor()
@@ -246,20 +249,22 @@ def upload_document():
         conn.commit()
         cursor.close()
         conn.close()
-        
+
         # Create a document object with relevant information
         document = {
             "filename": filename,
             "path": document_path
         }
-        
-        return render_template('upload_document.html', document=document)
-    
+
+        #return render_template('upload_document.html', document=document)
+    else :
+        flash('Please select a file to upload.')
+        #return redirect(url_for('upload_document'))
+
     # If the request method is GET, simply render the upload_document.html template
     return render_template('upload_document.html')
 
 @app.route('/download_document/<document_id>', methods=['GET'])
-@login_required
 def download_document(document_id):
     # Retrieve the document information from the database
     cursor = mysql.connection.cursor()
@@ -282,6 +287,8 @@ def download_document(document_id):
             return "File not found."
     else:
         return "Document not found."
+    
+    return render_template('download_document.html')
 
 @app.route('/edit_document/<document_id>', methods=['GET', 'POST'])
 @login_required

@@ -91,23 +91,19 @@
     <table class="document-table">
       <thead>
         <tr>
-          <th>SN</th>
           <th>Document Name</th>
-          <th>Document Title</th>
-          <th>Size</th>
-          <th>Type</th>
-          <th>Department</th>
-          <th>Owner</th>
-          <th>Access</th>
-          <th>Upload Time</th>
-          <th>Action</th>
+          <th>Visibility</th>
+          <th>Download</th>
         </tr>
       </thead>
       <tbody>
-        <!-- Loop through documents and generate table rows -->
+        <!-- Loop through the documents and render a row for each document -->
         {% for document in documents %}
-        <p>{{ document.filename }} <a
-            href="{{ url_for('download_document', document_id=document.document_id) }}">Download</a></p>
+          <tr>
+             <td>{{ document.name }}</td>
+             <td>{{ document.visibility }}</td>
+             <td><a href="/download_document/{{ document.id }}">Download</a></td>
+          </tr>
         {% endfor %}
       </tbody>
     </table>
